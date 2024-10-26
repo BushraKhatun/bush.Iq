@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz with Signup and Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #101010;
+        }
+
+    
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        #quiz-container {
+            position: relative;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            animation: glow 1.5s infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px rgba(255, 0, 0, 0.6), 0 0 20px rgba(255, 0, 0, 0.4), 0 0 30px rgba(255, 0, 0, 0.2);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.6), 0 0 30px rgba(0, 255, 0, 0.4), 0 0 40px rgba(0, 255, 0, 0.2);
+            }
+        }
+
+        #quiz-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            border: 5px solid;
+            border-image: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff);
+            border-image-slice: 1;
+            animation: borderAnimation 3s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes borderAnimation {
+            0% {
+                border-image-source: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff);
+                transform: rotate(0deg);
+            }
+            100% {
+                border-image-source: linear-gradient(45deg, #8b00ff, #0000ff, #00ffff, #00ff00, #ffff00, #ff7f00, #ff0000);
+                transform: rotate(360deg);
+            }
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            margin: 10px 0;
+            padding: 10px;
+            width: calc(100% - 20px);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .button {
+            background-color: #051a30;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .button:hover {
+            background-color: #6a6af0;
+        }
+
+        #nickname-display {
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        #settings-btn {
+            
+            top: 10px;
+            right: 10px;
+            background-color: #011340;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #settings-btn:hover {
+            background-color: #6d8dee;
+        }
+
+        #settings-panel {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 200px;
+            text-align: left;
+            z-index: 1000;
+        }
+
+        #settings-panel label,
+        #settings-panel input[type="range"],
+        #settings-panel button {
+            display: block;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        #question {
+            color: #0c2036;
+            margin-bottom: 20px;
+        }
+
+        #next-btn {
+            display: none;
+        }
+
+        #feedback {
+            margin-top: 10px;
+            color: red;
+        }
+
+        #feedback-panel {
+            display: none;
+            position: fixed;
+            top: 50px;
+            right: 10px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            text-align: left;
+            z-index: 1000;
+        }
+
+        #feedback-panel label,
+        #feedback-panel input,
+        #feedback-panel button {
+            display: block;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        #feedback-panel button {
+            width: auto;
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .control-buttons .button {
+            width: 30%;
+        }
+    </style>
+</head>
+<body>
+    
+    <video id="signup-video" autoplay muted loop>
+        <source src="5680034-hd_1920_1080_24fps.mp4" type="video/mp4">
+    </video>
+
+    
+    <video id="quiz-video" autoplay muted loop style="display: none;">
+        <source src="7565817-hd_2048_1080_25fps.mp4" type="video/mp4">
+    </video>
+
+    
+    <video id="score-video" autoplay muted loop style="display: none;">
+        <source src="vecteezy_abstract-colorful-spotlight-concert-stage-background_2376080.mp4" type="video/mp4">
+    </video>
+
+    
+    <audio id="signup-music" src="have_i_got_news.mp3" loop></audio>
+
+    
+    <audio id="quiz-music" src="jeopardy_theme.mp3" loop></audio>
+
+    
+    <audio id="score-music" src="classic-instrumental-ringtone-30-second--954.mp3" loop></audio>
+
+    
+    <audio id="correct-sound" src="congratulations-deep-voice-172193.mp3"></audio>
+    <audio id="incorrect-sound" src="42370_download_oh_no_ringtone_funny_ringtones (1).mp3"></audio>
+
+    
+    <div class="container" id="signup-container">
+        <h2>Signup</h2>
+        <input type="text" id="username" class="input-field" placeholder="Enter your name">
+        <input type="password" id="password" class="input-field" placeholder="Enter your password">
+        <input type="text" id="nickname" class="input-field" placeholder="Enter your nickname">
+        <button class="button" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div class="container" id="quiz-container" style="display: none;">
+        <div id="settings-panel">
+            <label for="music-level">Music Level:</label>
+            <input type="range" id="music-level" min="0" max="100" value="50" onchange="adjustMusicVolume()">
+            <button onclick="saveSettings()">Save Settings</button>
+        </div>
+        <button id="feedback-btn" class="button" onclick="toggleFeedbackPanel()">Feedback</button>
+        <div id="feedback-panel">
+            <label for="rating">Rating (1-5):</label>
+            <input type="number" id="rating" min="1" max="5" placeholder="Enter rating">
+            <label for="feedback-text">Feedback:</label>
+            <textarea id="feedback-text" rows="4" placeholder="Enter your feedback"></textarea>
+            <button class="button" onclick="submitFeedback()">Submit Feedback</button>
+        </div>
+
+        
+        <div id="nickname-display"></div>
+        <div id="quiz">
+            <h2 id="question">Question text</h2>
+            <div class="options">
+                <button class="button option-btn" onclick="selectAnswer(0)">Answer 1</button>
+                <button class="button option-btn" onclick="selectAnswer(1)">Answer 2</button>
+                <button class="button option-btn" onclick="selectAnswer(2)">Answer 3</button>
+                <button class="button option-btn" onclick="selectAnswer(3)">Answer 4</button>
+            </div>
+            <div id="feedback"></div>
+            <button id="next-btn" onclick="nextQuestion()">Next</button>
+            <div class="control-buttons">
+                <button class="button" onclick="endQuiz()">End</button>
+
+                <button id="settings-btn" onclick="toggleSettingsPanel()">Settings</button>
+                
+                <button class="button" onclick="skipQuestion()">Skip</button>
+            </div>
+
+
+        </div>
+    </div>
+
+    
+    <div class="container" id="score-container" style="display: none;">
+        <h2>Quiz Completed!</h2>
+        <div id="score"></div>
+        <button class="button" onclick="restartQuiz()">Restart</button>
+    </div>
+
+    <script>
+        
+ 
+const questions = [
+    {
+        question: "What is the result of 2 + '2' in JavaScript?",
+        options: ["4", "22", "NaN", "Error"],
+        answer: 1,
+        feedback: "The + operator performs string concatenation when one operand is a string, so 2 + '2' results in '22'."
+    },
+    {
+        question: "Which planet is closest to the sun?",
+        options: ["Earth", "Venus", "Mercury", "Mars"],
+        answer: 2,
+        feedback: "Mercury is the closest planet to the sun. Earth is the third planet, Venus is the second, and Mars is the fourth."
+    },
+    {
+        question: "What is the square root of 64?",
+        options: ["6", "7", "8", "9"],
+        answer: 2,
+        feedback: "The square root of 64 is 8. 6 and 7 are incorrect, and 9 is too high."
+    },
+    {
+        question: "Who wrote 'To Kill a Mockingbird'?",
+        options: ["Harper Lee", "J.K. Rowling", "Ernest Hemingway", "Mark Twain"],
+        answer: 0,
+        feedback: "Harper Lee is the author of 'To Kill a Mockingbird'. J.K. Rowling wrote the Harry Potter series, Ernest Hemingway wrote 'The Old Man and the Sea', and Mark Twain wrote 'The Adventures of Tom Sawyer'."
+    },
+    {
+        question: "Which of the following is a correct way to declare a JavaScript variable?",
+        options: ["variable x = 10;", "var x = 10;", "int x = 10;", "let x == 10;"],
+        answer: 1,
+        feedback: "In JavaScript, 'var', 'let', and 'const' are used to declare variables. The correct option here is 'var x = 10;'."
+    },
+    {
+        question: "What does 'NaN' stand for?",
+        options: ["Not a Name", "No and Never", "Not a Number", "None and Null"],
+        answer: 2,
+        feedback: "'NaN' stands for 'Not a Number'. It indicates that a value is not a legal number."
+    },
+    {
+        question: "How do you write a single-line comment in JavaScript?",
+        options: ["<!-- This is a comment -->", "# This is a comment", "// This is a comment", "/* This is a comment */"],
+        answer: 2,
+        feedback: "In JavaScript, a single-line comment is written with two forward slashes: '// This is a comment'."
+    },
+    {
+        question: "What will 'typeof null' return in JavaScript?",
+        options: ["'null'", "'undefined'", "'object'", "'string'"],
+        answer: 2,
+        feedback: "In JavaScript, 'typeof null' returns 'object'. This is considered a quirk of the language."
+    },
+    {
+        question: "Which method is used to remove the last element from an array?",
+        options: ["pop()", "push()", "shift()", "unshift()"],
+        answer: 0,
+        feedback: "The 'pop()' method removes the last element from an array. 'push()' adds to the end, 'shift()' removes from the beginning, and 'unshift()' adds to the beginning."
+    },
+    {
+        question: "What will be the output of 'console.log(1 === '1')'?",
+        options: ["true", "false", "undefined", "Error"],
+        answer: 1,
+        feedback: "The '===' operator checks both value and type. Since 1 is a number and '1' is a string, '1 === '1'' returns false."
+    },
+    {
+        question: "Which of the following is used to check if a property exists in an object?",
+        options: ["exists", "hasOwnProperty", "propertyExists", "contains"],
+        answer: 1,
+        feedback: "The 'hasOwnProperty' method is used to check if a property exists directly in an object."
+    },
+    {
+        question: "What is the purpose of 'use strict' in JavaScript?",
+        options: ["To enable modern JavaScript features", "To indicate that the script is strict", "To catch common coding mistakes and unsafe actions", "To disable deprecated features"],
+        answer: 2,
+        feedback: "'use strict' is a directive that helps catch common coding mistakes and prevents unsafe actions. It does not enable modern features but enforces a stricter parsing."
+    },
+    {
+        question: "What is the output of 'null == undefined' in JavaScript?",
+        options: ["true", "false", "null", "undefined"],
+        answer: 0,
+        feedback: "In JavaScript, 'null' and 'undefined' are considered loosely equal, so 'null == undefined' returns true."
+    },
+
+    {
+        question: "Who created JavaScript?",
+        options: ["Brendan Eich", "Ryan Dahl", "Tim Berners-Lee", "Mark Zuckerberg"],
+        answer: 0,
+        feedback: "JavaScript was created by Brendan Eich while working at Netscape in 1995. Ryan Dahl created Node.js, Tim Berners-Lee invented the World Wide Web, and Mark Zuckerberg created Facebook."
+    },
+    {
+        question: "In which year was JavaScript first released?",
+        options: ["1995", "1996", "1997", "1998"],
+        answer: 0,
+        feedback: "JavaScript was first released in 1995 as part of Netscape Navigator 2.0. The subsequent versions followed in later years."
+    },
+    {
+        question: "What was the original name of JavaScript?",
+        options: ["Java", "LiveScript", "JScript", "ECMAScript"],
+        answer: 1,
+        feedback: "JavaScript was originally called LiveScript. It was renamed to JavaScript to reflect its relationship with Java, though it is not directly related to Java."
+    },
+    {
+        question: "Which organization standardizes JavaScript?",
+        options: ["W3C", "ECMA International", "ISO", "IEEE"],
+        answer: 1,
+        feedback: "ECMA International standardizes JavaScript through the ECMAScript specification. W3C deals with web standards, ISO is an international standards organization, and IEEE focuses on electrical and electronic standards."
+    },
+    {
+        question: "What is the name of the first edition of the ECMAScript specification?",
+        options: ["ECMAScript 1.0", "ECMAScript 2.0", "ECMAScript 3.0", "ECMAScript 4.0"],
+        answer: 0,
+        feedback: "The first edition of the ECMAScript specification is ECMAScript 1.0, published in 1997. Subsequent editions followed with updates and new features."
+    },
+    {
+        question: "Which version of JavaScript introduced the 'strict mode'?",
+        options: ["ECMAScript 3", "ECMAScript 5", "ECMAScript 6", "ECMAScript 2016"],
+        answer: 1,
+        feedback: "Strict mode was introduced in ECMAScript 5 (ES5), which aimed to improve code quality by catching common coding errors and disabling some JavaScript features."
+    },
+    {
+        question: "Which JavaScript engine was originally used by Google Chrome?",
+        options: ["V8", "SpiderMonkey", "JavaScriptCore", "Chakra"],
+        answer: 0,
+        feedback: "Google Chrome originally used the V8 JavaScript engine, which is known for its performance. SpiderMonkey is used by Firefox, JavaScriptCore is used by Safari, and Chakra was used by Microsoft Edge before it switched to Chromium."
+    },
+    {
+        question: "What was the major feature added in ECMAScript 6 (ES6)?",
+        options: ["Arrow Functions", "Generics", "Interfaces", "Decorators"],
+        answer: 0,
+        feedback: "ECMAScript 6, also known as ES6, introduced several new features, including arrow functions, classes, and modules. Generics, interfaces, and decorators are features in other languages or proposed for future ECMAScript versions."
+    },
+    {
+        question: "What is the primary purpose of Node.js?",
+        options: ["Client-side scripting", "Server-side scripting", "Database management", "Web design"],
+        answer: 1,
+        feedback: "Node.js is primarily used for server-side scripting, allowing JavaScript to be run on the server. It is not used for client-side scripting, database management, or web design directly."
+    },
+    {
+        question: "Which company developed the JavaScript engine 'SpiderMonkey'?",
+        options: ["Netscape", "Microsoft", "Apple", "Google"],
+        answer: 0,
+        feedback: "SpiderMonkey is the JavaScript engine developed by Netscape, which was later used in Firefox. Microsoft developed JScript, Apple developed JavaScriptCore, and Google developed V8."
+    },
+    {
+        question: "Which version of ECMAScript introduced async/await syntax?",
+        options: ["ECMAScript 5", "ECMAScript 6", "ECMAScript 7", "ECMAScript 8"],
+        answer: 3,
+        feedback: "The async/await syntax was introduced in ECMAScript 8 (ES2017), which simplifies asynchronous programming by allowing asynchronous code to be written in a more synchronous style."
+    },
+
+    {
+        question: "Which company first implemented JavaScript?",
+        options: ["Netscape", "Microsoft", "Google", "Mozilla"],
+        answer: 0,
+        feedback: "JavaScript was first implemented by Netscape. Microsoft developed JScript, Google created V8, and Mozilla developed SpiderMonkey."
+    },
+    {
+        question: "Which version of ECMAScript introduced the concept of modules?",
+        options: ["ECMAScript 3", "ECMAScript 5", "ECMAScript 6", "ECMAScript 7"],
+        answer: 2,
+        feedback: "ECMAScript 6 (ES6) introduced the concept of modules, which allow for better code organization and reuse. ECMAScript 3 and 5 did not include module support, and ECMAScript 7 did not add significant changes in this area."
+    },
+    {
+        question: "What is the purpose of the 'let' keyword introduced in ECMAScript 6?",
+        options: ["Define constants", "Create block-scoped variables", "Declare functions", "Manage asynchronous code"],
+        answer: 1,
+        feedback: "'let' allows for block-scoped variable declarations, providing better control over variable scope compared to 'var', which is function-scoped. It does not define constants, declare functions, or manage asynchronous code."
+    },
+    {
+        question: "What feature introduced in ECMAScript 6 allows for template literals?",
+        options: ["String Interpolation", "Arrow Functions", "Destructuring Assignment", "Default Parameters"],
+        answer: 0,
+        feedback: "Template literals, introduced in ECMAScript 6, allow for string interpolation and multi-line strings. Arrow functions, destructuring assignment, and default parameters are other features introduced in ES6 but are not related to template literals."
+    },
+    {
+        question: "Which version of ECMAScript standardized the 'Promise' object?",
+        options: ["ECMAScript 5", "ECMAScript 6", "ECMAScript 7", "ECMAScript 8"],
+        answer: 1,
+        feedback: "The 'Promise' object was standardized in ECMAScript 6 (ES6), which improved asynchronous programming by providing a more robust way to handle asynchronous operations. ECMAScript 5, 7, and 8 did not introduce 'Promise'."
+    },
+    {
+        question: "What was the main reason for the creation of JavaScript?",
+        options: ["To enhance web browsers with scripting capabilities", "To manage databases", "To create server-side applications", "To replace Java"],
+        answer: 0,
+        feedback: "JavaScript was created to enhance web browsers with scripting capabilities, allowing for dynamic and interactive web content. It was not created to manage databases, create server-side applications, or replace Java."
+    },
+    {
+        question: "What is the primary focus of ECMAScript 2019 (ES10)?",
+        options: ["Error Handling", "Regular Expressions", "Array Methods", "String Methods"],
+        answer: 2,
+        feedback: "ECMAScript 2019 (ES10) focused on adding new Array methods, including 'flat' and 'flatMap'. Error handling, regular expressions, and string methods were addressed in other ECMAScript versions."
+    }
+];
+
+
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+
+        function startQuiz() {
+            document.getElementById("signup-container").style.display = "none";
+            document.getElementById("quiz-container").style.display = "block";
+            document.getElementById("signup-video").style.display = "none";
+            document.getElementById("quiz-video").style.display = "block";
+
+            const signupMusic = document.getElementById("signup-music");
+            const quizMusic = document.getElementById("quiz-music");
+            signupMusic.pause();
+            quizMusic.play();
+
+            const nickname = document.getElementById("nickname").value;
+            document.getElementById("nickname-display").innerText = "Nickname: " + nickname;
+
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const questionElement = document.getElementById("question");
+            const options = document.querySelectorAll(".option-btn");
+            const currentQ = questions[currentQuestion];
+            questionElement.innerText = currentQ.question;
+
+            options.forEach((option, index) => {
+                option.innerText = currentQ.options[index];
+                option.disabled = false; // 
+                option.style.backgroundColor = ""; 
+            });
+
+            document.getElementById("next-btn").style.display = "none";
+            document.getElementById("feedback").innerText = "";
+        }
+
+        function selectAnswer(selectedIndex) {
+            const currentQ = questions[currentQuestion];
+            const feedback = document.getElementById("feedback");
+            const correctSound = document.getElementById("correct-sound");
+            const incorrectSound = document.getElementById("incorrect-sound");
+            const options = document.querySelectorAll(".option-btn");
+
+            if (selectedIndex === currentQ.answer) {
+                feedback.innerText = "Correct!";
+                correctSound.play();
+                correctAnswers++;
+                options[selectedIndex].style.backgroundColor = "lightgreen";
+            } else {
+                feedback.innerText = `Incorrect! ${currentQ.feedback}`;
+                incorrectSound.play();
+                options[selectedIndex].style.backgroundColor = "red";
+            }
+
+            options.forEach(option => option.disabled = true); 
+            document.getElementById("next-btn").style.display = "block";
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function endQuiz() {
+            document.getElementById("quiz-container").style.display = "none";
+            document.getElementById("quiz-video").style.display = "none";
+            document.getElementById("score-container").style.display = "block";
+            document.getElementById("score-video").style.display = "block";
+
+            const scoreElement = document.getElementById("score");
+            scoreElement.innerText = `Your score is ${correctAnswers} out of ${questions.length}`;
+
+            
+            const quizMusic = document.getElementById("quiz-music");
+            quizMusic.pause();
+
+            const scoreMusic = document.getElementById("score-music");
+            scoreMusic.play();
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            document.getElementById("score-container").style.display = "none";
+            document.getElementById("quiz-container").style.display = "block";
+            document.getElementById("score-video").style.display = "none";
+            document.getElementById("quiz-video").style.display = "block";
+
+            const scoreMusic = document.getElementById("score-music");
+            const quizMusic = document.getElementById("quiz-music");
+            scoreMusic.pause();
+            quizMusic.play();
+
+            showQuestion();
+        }
+
+        function skipQuestion() {
+            nextQuestion();
+        }
+
+        function toggleSettingsPanel() {
+            const settingsPanel = document.getElementById("settings-panel");
+            settingsPanel.style.display = settingsPanel.style.display === "none" ? "block" : "none";
+        }
+
+        function toggleFeedbackPanel() {
+            const feedbackPanel = document.getElementById("feedback-panel");
+            feedbackPanel.style.display = feedbackPanel.style.display === "none" ? "block" : "none";
+        }
+
+        function submitFeedback() {
+            const rating = document.getElementById("rating").value;
+            const feedbackText = document.getElementById("feedback-text").value;
+            if (rating && feedbackText) {
+                alert(`Feedback submitted!\nRating: ${rating}\nFeedback: ${feedbackText}`);
+                document.getElementById("feedback-panel").style.display = "none";
+                document.getElementById("rating").value = '';
+                document.getElementById("feedback-text").value = '';
+            } else {
+                alert("Please fill in both the rating and feedback fields.");
+            }
+        }
+
+        function adjustMusicVolume() {
+            const musicLevel = document.getElementById("music-level").value;
+            const quizMusic = document.getElementById("quiz-music");
+            quizMusic.volume = musicLevel / 100;
+        }
+
+        function saveSettings() {
+            const musicLevel = document.getElementById("music-level").value;
+            adjustMusicVolume();
+            alert("Settings saved!");
+        }
+    </script>
+</body>
+</html>
